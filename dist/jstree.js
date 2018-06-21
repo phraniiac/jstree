@@ -596,6 +596,7 @@
 			this.element.html("<"+"ul class='jstree-container-ul jstree-children' role='group'><"+"li id='j"+this._id+"_loading' class='jstree-initial-node jstree-loading jstree-leaf jstree-last' role='tree-item'><i class='jstree-icon jstree-ocl'></i><"+"a class='jstree-anchor' href='#'><i class='jstree-icon jstree-themeicon-hidden'></i>" + this.get_string("Loading ...") + "</a></li></ul>");
 			this.element.attr('aria-activedescendant','j' + this._id + '_loading');
 			this._data.core.li_height = this.get_container_ul().children("li").first().outerHeight() || 24;
+			
 			this._data.core.node = this._create_prototype_node();
 			/**
 			 * triggered after the loading text is shown and before loading starts
@@ -633,7 +634,7 @@
 		 * @return {DOMElement}
 		 */
 		_create_prototype_node : function () {
-			var _node = document.createElement('LI'), _temp1, _temp2;
+			var _node = document.createElement('LI'), _temp1, _temp2, _temp3;
 			_node.setAttribute('role', 'treeitem');
 			_temp1 = document.createElement('I');
 			_temp1.className = 'jstree-icon jstree-ocl';
@@ -647,7 +648,11 @@
 			_temp2.className = 'jstree-icon jstree-themeicon';
 			_temp2.setAttribute('role', 'presentation');
 			_temp1.appendChild(_temp2);
+			_temp3 = document.createElement('SPAN');
+			_temp3.className = 'jstree-list-of-nodes';
+
 			_node.appendChild(_temp1);
+			_node.appendChild(_temp3);
 			_temp1 = _temp2 = null;
 
 			return _node;
@@ -1315,6 +1320,8 @@
 						}
 					}
 				}
+
+
 				dom.removeClass("jstree-loading").attr('aria-busy',false);
 				/**
 				 * triggered after a node is loaded
@@ -2553,6 +2560,33 @@
 				node.childNodes[1].innerHTML += obj.text;
 			}
 
+			
+
+			if(obj.data && obj.data.list_of_link) {
+				node.childNodes[2].setAttribute('id', 'trigger_list_'+node.id);
+				
+				node.childNodes[2].textContent = " >> ";
+				node.childNodes[2].style.fontSize = "10px";
+				node.childNodes[2].style.cursor = "pointer";
+
+				var linkSpan = d.createElement('SPAN');
+				linkSpan.setAttribute('id', 'span_link_'+node.id);
+
+				for (var idx = 0; idx < obj.data.list_of_link.length; ++idx) {
+					var a = d.createElement('A');
+					a.setAttribute('href', obj.data.list_of_link[idx][1]);
+					a.style.marginLeft = "10px";
+					a.textContent = obj.data.list_of_link[idx][0];
+					linkSpan.appendChild(a);
+				}
+				linkSpan.style.display = "none";
+				node.appendChild(linkSpan);
+
+				node.childNodes[2].addEventListener("click", function() {
+					d.getElementById('span_link_'+node.id).style.display = d.getElementById('span_link_'+node.id).style.display === 'none' ? '' : 'none';
+					d.getElementById('trigger_list_'+node.id).textContent = d.getElementById('trigger_list_'+node.id).textContent === " << " ? " >> " : " << ";
+				})
+			}
 
 			if(deep && obj.children.length && (obj.state.opened || force_render) && obj.state.loaded) {
 				k = d.createElement('UL');
@@ -2566,6 +2600,13 @@
 			if(old) {
 				node.appendChild(old);
 			}
+
+
+			
+			// var dom_link = document.getElementById(node.id);
+			// console.log(dom_link);
+			// console.log(dom_link.children().eq(2));
+
 			if(!is_callback) {
 				// append back using par / ind
 				if(!par) {
@@ -3697,6 +3738,7 @@
 		 * @trigger set_text.jstree
 		 */
 		set_text : function (obj, val) {
+			// lets try here.
 			var t1, t2;
 			if($.isArray(obj)) {
 				obj = obj.slice();
@@ -3711,6 +3753,9 @@
 			if(this.get_node(obj, true).length) {
 				this.redraw_node(obj.id);
 			}
+
+			
+			
 			/**
 			 * triggered when a node text value is changed
 			 * @event
@@ -4491,7 +4536,7 @@
 			w2 = ai.width() * ai.length,
 			*/
 			t  = default_text;
-			h1 = $("<"+"div />", { css : { "position" : "absolute", "top" : "-200px", "left" : (rtl ? "0px" : "-1000px"), "visibility" : "hidden" } }).appendTo(document.body);
+			h1 = $("<"+"div />", { css : { "position" : "absolute", "top" : "-200px", "left" : (rtl ? "0px" : "-1000px"), "visibility" : "hidden" } }).appendTo("body");
 			h2 = $("<"+"input />", {
 						"value" : t,
 						"class" : "jstree-rename-input",
@@ -6424,7 +6469,7 @@
 					vakata_context.element.html(vakata_context.html);
 				}
 				if(vakata_context.items.length) {
-					vakata_context.element.appendTo(document.body);
+					vakata_context.element.appendTo("body");
 					e = vakata_context.element;
 					x = vakata_context.position_x;
 					y = vakata_context.position_y;
@@ -6480,7 +6525,7 @@
 			}
 		};
 		$(function () {
-			right_to_left = $(document.body).css("direction") === "rtl";
+			right_to_left = $("body").css("direction") === "rtl";
 			var to = false;
 
 			vakata_context.element = $("<ul class='vakata-context'></ul>");
@@ -6772,7 +6817,7 @@
 				lastmv = false;
 				lastev = false;
 				if(!data || !data.data || !data.data.jstree) { return; }
-				marker.appendTo(document.body); //.show();
+				marker.appendTo('body'); //.show();
 			})
 			.on('dnd_move.vakata.jstree', function (e, data) {
 				var isDifferentNode = data.event.target !== lastev.target;
@@ -7117,7 +7162,7 @@
 						Math.abs(e.pageY - vakata_dnd.init_y) > (vakata_dnd.is_touch ? $.vakata.dnd.settings.threshold_touch : $.vakata.dnd.settings.threshold)
 					) {
 						if(vakata_dnd.helper) {
-							vakata_dnd.helper.appendTo(document.body);
+							vakata_dnd.helper.appendTo("body");
 							vakata_dnd.helper_w = vakata_dnd.helper.outerWidth();
 						}
 						vakata_dnd.is_drag = true;
